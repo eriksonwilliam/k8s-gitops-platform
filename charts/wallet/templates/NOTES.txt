@@ -1,0 +1,12 @@
+O servico wallet foi implantado.
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+Para acessar localmente via port-forward:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "wallet.fullname" . }} 8080:{{ .Values.service.port }}
+
+Depois:
+
+  curl localhost:8080/health

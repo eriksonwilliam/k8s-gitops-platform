@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  manifests:
+    name: Helm, Kustomize e ArgoCD
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: latest
+
+      - name: Instalar kubeconform
+        run: |
+          curl -sSfL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz \
+            | tar -xz kubeconform
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Helm lint
+        run: |
+          helm lint charts/wallet
+          helm lint charts/wallet -f charts/wallet/values-dev.yaml
+          helm lint charts/wallet -f charts/wallet/values-prod.yaml
+
+      - name: Helm template + kubeconform
+        run: helm template wallet charts/wallet -f charts/wallet/values-prod.yaml | kubeconform -strict -ignore-missing-schemas -summary
+
+      - name: Kustomize build + kubeconform
+        run: |
+          kubectl kustomize kustomize/overlays/dev | kubeconform -strict -ignore-missing-schemas -summary
+          kubectl kustomize kustomize/overlays/prod | kubeconform -strict -ignore-missing-schemas -summary
+
+      - name: ArgoCD manifests
+        run: kubeconform -strict -ignore-missing-schemas -summary argocd/
+
+  terraform:
+    name: Terraform fmt e validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Format
+        run: terraform -chdir=terraform fmt -check
+
+      - name: Init e validate
+        run: |
+          terraform -chdir=terraform init -backend=false
+          terraform -chdir=terraform validate

@@ -1,0 +1,61 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/eriksonwilliam/go-wallet-pix
+  # tag vazio usa o appVersion do Chart
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+podAnnotations: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+containerPort: 3000
+
+env:
+  PORT: "3000"
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: wallet.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# ServiceMonitor (Prometheus Operator). Requer que a aplicacao exponha /metrics;
+# desabilitado por padrao ate a app publicar o endpoint.
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  path: /metrics
+
+probes:
+  path: /health

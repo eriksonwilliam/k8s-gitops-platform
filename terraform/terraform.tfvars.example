@@ -1,0 +1,3 @@
+kubeconfig_path  = "~/.kube/config"
+kube_context     = ""
+wallet_namespace = "wallet"
