@@ -1,0 +1,15 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+# Sem PDB, um drain de no (upgrade do cluster) pode tirar todas as replicas de
+# uma vez. Com minAvailable 1 sempre sobra uma servindo.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "wallet.fullname" . }}
+  labels:
+    {{- include "wallet.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "wallet.selectorLabels" . | nindent 6 }}
+{{- end }}
