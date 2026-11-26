@@ -15,4 +15,4 @@ images:
     newName: ghcr.io/eriksonwilliam/go-wallet-pix
     # Tag imutavel, a mesma do appVersion do chart Helm. `latest` impede
     # rollback auditavel e deixa pods do mesmo Deployment com codigo diferente.
-    newTag: "0.1.0"
+    newTag: "0.2.0"
