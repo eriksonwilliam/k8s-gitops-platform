@@ -21,9 +21,3 @@ variable "argocd_chart_version" {
   type        = string
   default     = "7.7.5"
 }
-
-variable "kube_prometheus_stack_version" {
-  description = "Versao do chart kube-prometheus-stack."
-  type        = string
-  default     = "65.0.0"
-}
