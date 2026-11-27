@@ -2,7 +2,11 @@ replicaCount: 2
 
 image:
   repository: ghcr.io/eriksonwilliam/go-wallet-pix
-  # tag vazio usa o appVersion do Chart
+  # Digest imutavel (sha256:...). Quando definido, a imagem e referenciada so
+  # por digest e `tag` precisa ficar vazio. Tag no registry pode ser
+  # sobrescrita; digest nao.
+  digest: ""
+  # tag vazio usa o appVersion do Chart (ignorada quando ha digest)
   tag: ""
   pullPolicy: IfNotPresent
 

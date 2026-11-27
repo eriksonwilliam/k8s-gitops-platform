@@ -9,13 +9,20 @@
       "required": ["repository"],
       "properties": {
         "repository": { "type": "string", "minLength": 1 },
+        "digest": {
+          "type": "string",
+          "pattern": "^(sha256:[a-f0-9]{64})?$",
+          "description": "Digest imutavel (sha256:<64 hex>); vazio usa a tag."
+        },
         "tag": {
           "type": "string",
           "not": { "const": "latest" },
-          "description": "Tag imutavel; vazio usa o appVersion do chart."
+          "description": "Tag imutavel; vazio usa o appVersion do chart. Nao combina com digest."
         },
         "pullPolicy": { "enum": ["Always", "IfNotPresent", "Never"] }
-      }
+      },
+      "if": { "properties": { "digest": { "minLength": 1 } }, "required": ["digest"] },
+      "then": { "properties": { "tag": { "maxLength": 0 } } }
     },
     "serviceAccount": {
       "type": "object",

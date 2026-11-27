@@ -99,8 +99,14 @@ helm upgrade --install wallet charts/wallet \
 - **NetworkPolicy** (prod): entrada só do ingress controller e do namespace
   `observability`; saída só para DNS.
 - **PodDisruptionBudget** (prod): `minAvailable: 1` durante drains.
-- **Tags imutáveis**: o `values.schema.json` recusa `image.tag=latest` e o
-  kustomize fixa a mesma tag do `appVersion`.
+- **Imagem por digest**: em produção o chart referencia
+  `ghcr.io/eriksonwilliam/go-wallet-pix@sha256:1bbe1dd6…3d6387` (go-wallet-pix
+  0.2.0), e o kustomize usa o mesmo digest. Tag no registry pode ser
+  sobrescrita; digest não. `image.digest` e `image.tag` são mutuamente
+  exclusivos: o `values.schema.json` recusa os dois juntos, um digest fora do
+  formato `sha256:<64 hex>` e `image.tag=latest`, e o template falha com
+  mensagem própria mesmo sem validação de schema.
+  `scripts/test-image-ref.sh` testa esses casos (CI e `make image-ref`).
 - **CI**: Trivy nos manifests renderizados e no Terraform, falhando em
   MEDIUM ou acima. As duas exceções aceitas estão justificadas em
   `.trivyignore`.
@@ -126,9 +132,10 @@ scraping de verdade pelo Prometheus Operator.
 
 ## Notas
 
-- A imagem referenciada é `ghcr.io/eriksonwilliam/go-wallet-pix`. Ela precisa
-  ser publicada (GitHub Actions no repositório do serviço) antes de aplicar
-  num cluster real.
+- A imagem referenciada é `ghcr.io/eriksonwilliam/go-wallet-pix`, versão 0.2.0,
+  publicada no GHCR pelo workflow manual do go-wallet-pix (pacote público, sem
+  `imagePullSecret`). Este repositório ainda não foi aplicado em nenhum cluster
+  real; a única execução foi a validação em kind descrita acima.
 - O `ServiceMonitor` fica desligado por padrão e ligado em prod. A imagem
   usada precisa conter o endpoint `/metrics` (go-wallet-pix depois do PR que o
   adicionou); com uma imagem anterior o alvo fica permanentemente `down`.

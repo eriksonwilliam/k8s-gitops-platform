@@ -34,6 +34,9 @@ jobs:
           helm lint charts/wallet -f charts/wallet/values-dev.yaml
           helm lint charts/wallet -f charts/wallet/values-prod.yaml
 
+      - name: Referencia da imagem (digest ou tag, nunca os dois)
+        run: bash scripts/test-image-ref.sh
+
       - name: Helm template + kubeconform
         run: helm template wallet charts/wallet -f charts/wallet/values-prod.yaml | kubeconform -strict -ignore-missing-schemas -summary
 
