@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: wallet
+  namespace: argocd
+spec:
+  description: Aplicacao wallet. Menor privilegio, separado da plataforma.
+  # O projeto `platform` precisa de recursos de cluster (CRDs, ClusterRoles do
+  # kube-prometheus-stack). A wallet nao: um erro no chart dela nao pode criar
+  # ClusterRoleBinding nem escrever fora do proprio namespace.
+  sourceRepos:
+    - https://github.com/eriksonwilliam/k8s-gitops-platform.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: wallet
+  clusterResourceWhitelist:
+    # CreateNamespace=true na Application precisa criar o Namespace.
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor

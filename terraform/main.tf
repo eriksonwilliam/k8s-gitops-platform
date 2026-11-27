@@ -42,16 +42,8 @@ resource "helm_release" "argocd" {
   }
 }
 
-# Observabilidade: Prometheus + Grafana.
-resource "helm_release" "kube_prometheus_stack" {
-  name       = "kube-prometheus-stack"
-  repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "kube-prometheus-stack"
-  version    = var.kube_prometheus_stack_version
-  namespace  = kubernetes_namespace.observability.metadata[0].name
-
-  set {
-    name  = "prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues"
-    value = "false"
-  }
-}
+# Observabilidade (kube-prometheus-stack) NAO e instalada aqui: quem a
+# gerencia e a Application `observability` do ArgoCD. Instalar pelos dois
+# lados criava duas releases do mesmo chart no mesmo namespace, com dois
+# operators disputando CRDs e webhooks. O Terraform so cria o que precisa
+# existir antes do GitOps: namespaces e o proprio ArgoCD.

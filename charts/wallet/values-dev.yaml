@@ -1,8 +1,8 @@
 replicaCount: 1
 
-image:
-  tag: latest
-  pullPolicy: Always
+# Sem `latest`: tag mutavel faz dois pods do mesmo Deployment rodarem codigo
+# diferente e torna o rollback impossivel de auditar. Dev usa o appVersion do
+# chart, como prod; para testar outra imagem, sobrescreva image.tag.
 
 ingress:
   enabled: true

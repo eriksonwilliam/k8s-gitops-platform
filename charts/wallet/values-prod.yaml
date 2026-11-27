@@ -1,5 +1,10 @@
 replicaCount: 3
 
+image:
+  # go-wallet-pix 0.2.0 (tag git v0.2.0, commit 9718ce2). Digest do indice OCI
+  # publicado no GHCR pelo workflow "Imagem" (run 45881658848).
+  digest: sha256:1bbe1dd6ef673bcfd5a305f6c74aed411c6f89cf948762c382d55a861b3d6387
+
 autoscaling:
   enabled: true
   minReplicas: 3
@@ -22,4 +27,10 @@ ingress:
         - wallet.example.com
 
 serviceMonitor:
+  enabled: true
+
+podDisruptionBudget:
+  enabled: true
+
+networkPolicy:
   enabled: true

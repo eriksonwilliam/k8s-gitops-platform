@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "containerPort", "resources", "probes"],
+  "properties": {
+    "replicaCount": { "type": "integer", "minimum": 1 },
+    "image": {
+      "type": "object",
+      "required": ["repository"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "digest": {
+          "type": "string",
+          "pattern": "^(sha256:[a-f0-9]{64})?$",
+          "description": "Digest imutavel (sha256:<64 hex>); vazio usa a tag."
+        },
+        "tag": {
+          "type": "string",
+          "not": { "const": "latest" },
+          "description": "Tag imutavel; vazio usa o appVersion do chart. Nao combina com digest."
+        },
+        "pullPolicy": { "enum": ["Always", "IfNotPresent", "Never"] }
+      },
+      "if": { "properties": { "digest": { "minLength": 1 } }, "required": ["digest"] },
+      "then": { "properties": { "tag": { "maxLength": 0 } } }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "create": { "type": "boolean" },
+        "name": { "type": "string" },
+        "automountToken": { "type": "boolean" }
+      }
+    },
+    "containerPort": { "type": "integer", "minimum": 1, "maximum": 65535 },
+    "resources": {
+      "type": "object",
+      "required": ["requests", "limits"],
+      "properties": {
+        "requests": { "type": "object", "required": ["cpu", "memory"] },
+        "limits": { "type": "object", "required": ["memory"] }
+      }
+    },
+    "autoscaling": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minReplicas": { "type": "integer", "minimum": 1 },
+        "maxReplicas": { "type": "integer", "minimum": 1 },
+        "targetCPUUtilizationPercentage": { "type": "integer", "minimum": 1, "maximum": 100 }
+      }
+    },
+    "serviceMonitor": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "interval": { "type": "string", "pattern": "^[0-9]+(s|m)$" },
+        "path": { "type": "string", "pattern": "^/" }
+      }
+    },
+    "podDisruptionBudget": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minAvailable": { "type": ["integer", "string"] }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "allowedNamespaces": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "probes": {
+      "type": "object",
+      "required": ["path"],
+      "properties": { "path": { "type": "string", "pattern": "^/" } }
+    }
+  }
+}

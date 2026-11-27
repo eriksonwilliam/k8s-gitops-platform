@@ -13,4 +13,7 @@ labels:
 images:
   - name: wallet
     newName: ghcr.io/eriksonwilliam/go-wallet-pix
-    newTag: latest
+    # go-wallet-pix 0.2.0, por digest (o mesmo de values-prod.yaml do chart).
+    # Tag no registry pode ser sobrescrita; digest nao. So `digest`, sem
+    # `newTag`: com os dois o kustomize gera "repo:tag@digest".
+    digest: sha256:1bbe1dd6ef673bcfd5a305f6c74aed411c6f89cf948762c382d55a861b3d6387

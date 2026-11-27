@@ -33,6 +33,22 @@ app.kubernetes.io/name: {{ include "wallet.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+{{/*
+Referência da imagem: por digest OU por tag, nunca as duas. Com digest, o
+runtime ignora a tag de qualquer forma, e "repo:tag@digest" só faria a tag
+parecer relevante. Os dois definidos ao mesmo tempo é erro de configuração.
+*/}}
+{{- define "wallet.image" -}}
+{{- if and .Values.image.digest .Values.image.tag }}
+{{- fail "image.digest e image.tag sao mutuamente exclusivos: defina apenas um" }}
+{{- end }}
+{{- if .Values.image.digest }}
+{{- printf "%s@%s" .Values.image.repository .Values.image.digest }}
+{{- else }}
+{{- printf "%s:%s" .Values.image.repository (.Values.image.tag | default .Chart.AppVersion) }}
+{{- end }}
+{{- end }}
+
 {{- define "wallet.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
 {{- default (include "wallet.fullname" .) .Values.serviceAccount.name }}

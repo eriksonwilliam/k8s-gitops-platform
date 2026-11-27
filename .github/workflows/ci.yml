@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   manifests:
     name: Helm, Kustomize e ArgoCD
@@ -17,7 +20,7 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v4
         with:
-          version: latest
+          version: v3.17.3
 
       - name: Instalar kubeconform
         run: |
@@ -25,11 +28,14 @@ jobs:
             | tar -xz kubeconform
           sudo mv kubeconform /usr/local/bin/
 
-      - name: Helm lint
+      - name: Helm lint (inclui values.schema.json)
         run: |
           helm lint charts/wallet
           helm lint charts/wallet -f charts/wallet/values-dev.yaml
           helm lint charts/wallet -f charts/wallet/values-prod.yaml
+
+      - name: Referencia da imagem (digest ou tag, nunca os dois)
+        run: bash scripts/test-image-ref.sh
 
       - name: Helm template + kubeconform
         run: helm template wallet charts/wallet -f charts/wallet/values-prod.yaml | kubeconform -strict -ignore-missing-schemas -summary
@@ -42,6 +48,32 @@ jobs:
       - name: ArgoCD manifests
         run: kubeconform -strict -ignore-missing-schemas -summary argocd/
 
+      - name: Renderizar manifests para a varredura
+        run: |
+          mkdir -p rendered
+          helm template wallet charts/wallet -f charts/wallet/values-prod.yaml > rendered/helm-prod.yaml
+          kubectl kustomize kustomize/overlays/prod > rendered/kustomize-prod.yaml
+
+      # Varre o que chega ao cluster (manifests renderizados), nao os fontes:
+      # na base do kustomize `image: wallet` e um nome que o transformer
+      # `images:` substitui, e o Trivy acusaria falso positivo nele.
+      - name: Trivy (manifests renderizados)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: rendered
+          trivyignores: .trivyignore
+          severity: MEDIUM,HIGH,CRITICAL
+          exit-code: "1"
+
+      - name: Trivy (Terraform)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: terraform
+          severity: MEDIUM,HIGH,CRITICAL
+          exit-code: "1"
+
   terraform:
     name: Terraform fmt e validate
     runs-on: ubuntu-latest
@@ -51,6 +83,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
 
       - name: Format
         run: terraform -chdir=terraform fmt -check

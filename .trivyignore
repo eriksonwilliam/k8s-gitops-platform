@@ -1,0 +1,8 @@
+# KSV-0125: ghcr.io nao esta na lista padrao de registries confiaveis do
+# Trivy. A imagem e publicada pelo proprio go-wallet-pix no GHCR da conta.
+AVD-KSV-0125
+
+# KSV-0110: so aparece porque o `helm template` da CI roda sem `-n`. No
+# cluster, o namespace vem da Application do ArgoCD (wallet) ou do overlay
+# do kustomize (wallet-dev / wallet-prod).
+AVD-KSV-0110
