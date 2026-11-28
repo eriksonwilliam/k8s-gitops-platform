@@ -90,6 +90,27 @@ apaga sozinha. Para remover, faça um sync manual com prune.
 kubectl apply -k kustomize/overlays/dev
 ```
 
+## Proteção da `main`
+
+Com sync automático, o que chega à `main` vai para o cluster. A proteção
+está versionada em `.github/rulesets/main.json`:
+
+- PR obrigatório, merge só por squash, conversas resolvidas;
+- checks obrigatórios: os dois jobs da CI, com a branch atualizada;
+- sem force-push e sem exclusão da `main`;
+- sem bypass, inclusive para administradores;
+- 0 aprovações exigidas: com um único mantenedor, o GitHub não deixa o autor
+  aprovar o próprio PR, e exigir 1 travaria todo merge. A garantia vem dos
+  checks.
+
+`scripts/test-ruleset.sh` (CI e `make ruleset`) confere que cada check
+obrigatório é o nome de um job do workflow. Para aplicar (exige permissão de
+administrador no repositório):
+
+```bash
+gh api repos/eriksonwilliam/k8s-gitops-platform/rulesets --method POST --input .github/rulesets/main.json
+```
+
 ## Deploy manual do chart (sem ArgoCD)
 
 ```bash

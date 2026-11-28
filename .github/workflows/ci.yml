@@ -40,6 +40,9 @@ jobs:
       - name: Regras do ArgoCD (menor privilegio e ordem de sync)
         run: bash scripts/test-argocd-policy.sh
 
+      - name: Ruleset da main coerente com a CI
+        run: bash scripts/test-ruleset.sh
+
       - name: Helm template + kubeconform
         run: helm template wallet charts/wallet -f charts/wallet/values-prod.yaml | kubeconform -strict -ignore-missing-schemas -summary
 

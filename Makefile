@@ -4,11 +4,11 @@ TERRAFORM ?= terraform
 KUBECONFORM ?= kubeconform
 KC_FLAGS ?= -strict -ignore-missing-schemas -summary
 
-.PHONY: all validate lint image-ref argocd-policy template kustomize argocd tf-validate
+.PHONY: all validate lint image-ref argocd-policy ruleset template kustomize argocd tf-validate
 
 all: validate
 
-validate: lint image-ref argocd-policy template kustomize argocd tf-validate
+validate: lint image-ref argocd-policy ruleset template kustomize argocd tf-validate
 
 lint:
 	$(HELM) lint charts/wallet
@@ -20,6 +20,9 @@ image-ref:
 
 argocd-policy:
 	bash scripts/test-argocd-policy.sh
+
+ruleset:
+	bash scripts/test-ruleset.sh
 
 template:
 	$(HELM) template wallet charts/wallet -f charts/wallet/values-prod.yaml | $(KUBECONFORM) $(KC_FLAGS)
