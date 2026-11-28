@@ -111,6 +111,23 @@ administrador no repositório):
 gh api repos/eriksonwilliam/k8s-gitops-platform/rulesets --method POST --input .github/rulesets/main.json
 ```
 
+Pré-condições: este arquivo já na `main` e os dois checks já executados pelo
+menos uma vez nela (o GitHub só oferece checks que já rodaram).
+
+Conferir depois de aplicar:
+
+```bash
+gh api repos/eriksonwilliam/k8s-gitops-platform/rules/branches/main --jq '.[].type'
+# esperado: deletion, non_fast_forward, pull_request, required_status_checks
+```
+
+Desfazer (o id vem da listagem):
+
+```bash
+gh api repos/eriksonwilliam/k8s-gitops-platform/rulesets --jq '.[] | "\(.id) \(.name)"'
+gh api repos/eriksonwilliam/k8s-gitops-platform/rulesets/<id> --method DELETE
+```
+
 ## Deploy manual do chart (sem ArgoCD)
 
 ```bash
