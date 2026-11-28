@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+  annotations:
+    # Projetos antes das Applications que os usam.
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Plataforma (observabilidade). Sem acesso ao namespace argocd.
+  sourceRepos:
+    - https://prometheus-community.github.io/helm-charts
+  # observability e kube-system, onde o kube-prometheus-stack cria os Services
+  # de scrape de coredns, kube-controller-manager e afins. O namespace argocd
+  # ficou de fora: quem cria Applications e AppProjects e o projeto bootstrap.
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: observability
+    - server: https://kubernetes.default.svc
+      namespace: kube-system
+  # Tipos de cluster que o kube-prometheus-stack 65.0.0 renderiza (helm template
+  # --include-crds), mais Namespace para CreateNamespace=true. Nada de "*".
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+  # Tipos com namespace do mesmo render. O Pod de teste do Helm (hook
+  # test-success) nao entra: o ArgoCD ignora hooks de teste.
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: DaemonSet
+    - group: batch
+      kind: Job
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+    - group: monitoring.coreos.com
+      kind: Alertmanager
+    - group: monitoring.coreos.com
+      kind: Prometheus
+    - group: monitoring.coreos.com
+      kind: PrometheusRule
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor

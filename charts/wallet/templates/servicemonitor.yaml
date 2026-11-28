@@ -3,6 +3,9 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "wallet.fullname" . }}
+  annotations:
+    # Sem o CRD no cluster, o dry-run do ArgoCD falharia o sync inteiro.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   labels:
     {{- include "wallet.labels" . | nindent 4 }}
 spec:

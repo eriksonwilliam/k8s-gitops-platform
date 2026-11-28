@@ -28,10 +28,12 @@ kustomize/              # Alternativa declarativa em Kustomize
 └── overlays/           # dev (1 réplica) e prod (3 réplicas)
 
 argocd/                 # GitOps
-├── project.yaml        # AppProject `platform` (observabilidade, app-of-apps)
-├── project-wallet.yaml # AppProject `wallet`: só o namespace wallet e recursos listados
-├── app-of-apps.yaml    # Application raiz que gerencia as demais
-└── apps/               # wallet (Helm) + observability (kube-prometheus-stack)
+├── project-bootstrap.yaml # AppProject `bootstrap`: só Applications e AppProjects no namespace argocd
+├── app-of-apps.yaml       # Application raiz (projeto bootstrap, sem prune)
+└── apps/
+    ├── projects/          # AppProjects `platform` e `wallet`, geridos pelo GitOps (onda -1)
+    ├── observability.yaml # kube-prometheus-stack (onda 0)
+    └── wallet.yaml        # wallet via Helm (onda 1)
 
 terraform/              # Bootstrap do cluster: namespaces + ArgoCD
 ```
@@ -65,13 +67,22 @@ terraform apply
 
 ### 2. Ativar o GitOps (app-of-apps)
 
+**Pré-requisito: proteger a `main`** (PR obrigatório e CI verde) antes deste
+passo. Com sync automático, o que chega à `main` vai para o cluster.
+
 ```bash
-kubectl apply -f argocd/project.yaml -f argocd/project-wallet.yaml
+kubectl apply -f argocd/project-bootstrap.yaml
 kubectl apply -f argocd/app-of-apps.yaml
 ```
 
-A partir daí o ArgoCD sincroniza sozinho a `wallet` (via Helm) e a stack de
-observabilidade, seguindo o que está versionado neste repositório.
+Esses dois são os únicos manifestos aplicados à mão. A partir daí o ArgoCD
+sincroniza, em ondas: os AppProjects `platform` e `wallet` (onda -1), a
+observabilidade (onda 0, que instala os CRDs) e a `wallet` (onda 1, que usa o
+CRD do ServiceMonitor). As ondas entre Applications só esperam porque o
+Terraform configura o health check de `Application` no ArgoCD.
+
+A raiz (`app-of-apps`) não tem `prune`: tirar uma Application do Git não a
+apaga sozinha. Para remover, faça um sync manual com prune.
 
 ### Alternativa sem Helm/ArgoCD (Kustomize puro)
 
@@ -89,10 +100,11 @@ helm upgrade --install wallet charts/wallet \
 
 ## Segurança
 
-- **Dois AppProjects.** A wallet roda no projeto `wallet`, que só pode
-  escrever no namespace `wallet` e só os tipos de recurso que o chart usa. O
-  projeto `platform` precisa de recursos de cluster (CRDs e ClusterRoles do
-  kube-prometheus-stack), mas os destinos dele são namespaces explícitos, não `*`.
+- **Três AppProjects.** `bootstrap` só cria Applications e AppProjects no
+  namespace `argocd`. `platform` só escreve em `observability` e
+  `kube-system`, com a lista explícita dos tipos que o kube-prometheus-stack
+  usa (sem `*`). A wallet roda no projeto `wallet`, que só pode
+  escrever no namespace `wallet` e só os tipos de recurso que o chart usa.
 - **Pod**: não-root (`65532:65532`), `readOnlyRootFilesystem`, sem
   capabilities, `seccomp RuntimeDefault` e sem token de ServiceAccount montado
   (o serviço não fala com a API do Kubernetes).

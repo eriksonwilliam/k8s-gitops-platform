@@ -3,6 +3,9 @@ kind: AppProject
 metadata:
   name: wallet
   namespace: argocd
+  annotations:
+    # Projetos antes das Applications que os usam.
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Aplicacao wallet. Menor privilegio, separado da plataforma.
   # O projeto `platform` precisa de recursos de cluster (CRDs, ClusterRoles do
