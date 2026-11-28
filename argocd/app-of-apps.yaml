@@ -6,7 +6,8 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: platform
+  # Projeto minimo: so Applications e AppProjects no namespace argocd.
+  project: bootstrap
   source:
     repoURL: https://github.com/eriksonwilliam/k8s-gitops-platform.git
     targetRevision: main
@@ -18,7 +19,10 @@ spec:
     namespace: argocd
   syncPolicy:
     automated:
-      prune: true
+      # Sem prune na raiz: tirar uma Application do Git nao apaga, sozinho, a
+      # aplicacao e (pelo finalizer) todos os recursos dela. Remover exige
+      # sync manual com prune, uma decisao explicita.
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true

@@ -3,6 +3,9 @@ kind: Application
 metadata:
   name: wallet
   namespace: argocd
+  annotations:
+    # Depois da observabilidade: o ServiceMonitor depende do CRD dela.
+    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -23,3 +26,11 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    # Se o CRD ainda nao existir (primeira instalacao), tenta de novo em vez
+    # de ficar em erro ate um sync manual.
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

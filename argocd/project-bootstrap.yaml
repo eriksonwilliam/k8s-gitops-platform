@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: bootstrap
+  namespace: argocd
+spec:
+  description: Raiz do GitOps. So cria Applications e AppProjects no namespace argocd.
+  # Unico manifesto aplicado a mao (README, "Ativar o GitOps"). Tudo o mais,
+  # inclusive os projetos platform e wallet, vem do Git pelo app-of-apps.
+  sourceRepos:
+    - https://github.com/eriksonwilliam/k8s-gitops-platform.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: argoproj.io
+      kind: Application
+    - group: argoproj.io
+      kind: AppProject

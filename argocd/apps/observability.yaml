@@ -3,6 +3,9 @@ kind: Application
 metadata:
   name: observability
   namespace: argocd
+  annotations:
+    # Antes da wallet: instala os CRDs (ServiceMonitor) que ela usa.
+    argocd.argoproj.io/sync-wave: "0"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -28,3 +31,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
